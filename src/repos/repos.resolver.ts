@@ -1,4 +1,4 @@
-import { Resolver, Query } from '@nestjs/graphql';
+import { Resolver, Query, Args } from '@nestjs/graphql';
 import { ReposService } from './repos.service';
 import { Repo } from './repos.entity';
 
@@ -7,7 +7,11 @@ export class ReposResolver {
   constructor(private readonly reposService: ReposService) {}
 
   @Query()
-  async repos(): Promise<Repo[]> {
-    return await this.reposService.findAll();
+  repos(): Promise<Repo[]> {
+    return this.reposService.findAll();
+  }
+  @Query()
+  repo(@Args('id') id: number) {
+    return this.reposService.findOneById(id);
   }
 }

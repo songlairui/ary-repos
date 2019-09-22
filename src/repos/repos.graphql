@@ -36,4 +36,5 @@ type DeployLocation {
 
 type Query {
   repos: [Repo]
+  repo(id: Int): Repo
 }
