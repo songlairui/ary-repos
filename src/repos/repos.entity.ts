@@ -1,9 +1,15 @@
-import { Column, Entity, PrimaryColumn, OneToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
 import { AbstractBaseEntity } from '../common/abstract.entity';
 
 @Entity()
 export class Repo extends AbstractBaseEntity {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ length: 500 })
@@ -17,13 +23,18 @@ export class Repo extends AbstractBaseEntity {
   depolylocations: DepolyLocation[];
 
   // 远程地址
-  @OneToMany(type => RemoteRepo, result => result.repo)
-  remotes: RemoteRepo[];
+  @OneToMany(type => RepoRemote, result => result.repo)
+  remotes: RepoRemote[];
+
+  constructor(partial: Partial<Repo>) {
+    super();
+    Object.assign(this, partial);
+  }
 }
 
 @Entity()
 export class DepolyLocation extends AbstractBaseEntity {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @ManyToOne(type => Repo, result => result.depolylocations)
@@ -40,19 +51,30 @@ export class DepolyLocation extends AbstractBaseEntity {
 
   @Column('text')
   description: string;
+  constructor(partial: Partial<DepolyLocation>) {
+    super();
+    Object.assign(this, partial);
+  }
 }
 
 @Entity()
-export class RemoteRepo {
-  @PrimaryColumn()
+export class RepoRemote {
+  @PrimaryGeneratedColumn()
   id: number;
 
   @ManyToOne(type => Repo, result => result.remotes)
   repo: Repo;
 
   @Column()
+  name: string;
+
+  @Column()
   fetch: string;
 
   @Column()
   push: string;
+
+  constructor(partial: Partial<RepoRemote>) {
+    Object.assign(this, partial);
+  }
 }
