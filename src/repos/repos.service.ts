@@ -16,55 +16,39 @@ export class ReposService {
   ) {}
 
   async findAll(): Promise<any> {
-    // 选出最近的一条记录const
+    // 外键关联字段 remotes deploylocations, 只取关联数据中最新的一个
     const repoRemoteQb = this.repoRemoteRepository
-      .createQueryBuilder('Repo__remotes')
+      .createQueryBuilder('self1')
+      .select('self1.id', 'id')
       .leftJoin(
         RepoRemote,
         'self2',
-        'Repo__remotes.repoId = self2.repoId and Repo__remotes.id < self2.id',
+        'self1.repoId = self2.repoId and self1.id < self2.id',
       )
       .where('self2.id IS NULL')
       .getQuery();
-    // const deployLocQb = this.deployLocRepository
-    //   .createQueryBuilder('self1')
-    //   .leftJoin(
-    //     DeployLocation,
-    //     'self2',
-    //     'self1.repoId = self2.repoId and self1.id < self2.id',
-    //   )
-    //   .where('self2.id IS NULL')
-    //   .getQuery();
+
+    const deployLocQb = this.deployLocRepository
+      .createQueryBuilder('self1')
+      .select('self1.id', 'id')
+      .leftJoin(
+        DeployLocation,
+        'self2',
+        'self1.repoId = self2.repoId and self1.updated_at < self2.updated_at',
+      )
+      .where('self2.id IS NULL')
+      .getQuery();
 
     const result = await this.repoRepository
       .createQueryBuilder('Repo')
+      .leftJoinAndSelect('Repo.remotes', 't1', `t1.id IN (${repoRemoteQb})`)
       .leftJoinAndSelect(
-        qr =>
-          qr
-            .subQuery()
-            .from(RepoRemote, 'RepoRemote')
-            .leftJoin(
-              `(${this.repoRemoteRepository
-                .createQueryBuilder('rr')
-                .where({})
-                .getQuery()})`,
-              'self2',
-              'RepoRemote.repoId = self2.rr_repoId and RepoRemote.id < self2.rr_id',
-            )
-            .where('self2.rr_id IS NULL'),
-        'r2',
-        'Repo.id = r2.repoId',
+        'Repo.deploylocations',
+        't2',
+        `t2.id IN (${deployLocQb})`,
       )
-      // .leftJoinAndSelect(
-      //   `(${repoRemoteQb})`,
-      //   'r2',
-      //   'Repo.id = r2.Repo__remotes_repoId',
-      // )
-      // .getQuery();
-      // .leftJoinAndSelect(deployLocQb, 'deployLoc', 'repo.id = deployLoc.repoId')
       .getMany();
-    console.info(result, 'result');
-    console.info(result.map(item => item.remotes));
+
     return result;
   }
 
