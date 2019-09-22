@@ -1,0 +1,39 @@
+scalar Date
+
+type Repo {
+  name: String
+  description: String
+
+  deploylocations: [DeployLocation]
+  remotes: [RepoRemote]
+
+  id: Int!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+type RepoRemote {
+  repo: Repo
+  name: String
+  fetch: String
+  push: String
+
+  id: Int!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+type DeployLocation {
+  repo: Repo
+  dirpath: String
+  device: String
+  os: String
+
+  id: Int!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+type Query {
+  repos: [Repo]
+}
