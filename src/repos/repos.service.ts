@@ -9,10 +9,26 @@ export class ReposService {
   constructor(
     @InjectRepository(Repo)
     private readonly repoRepository: Repository<Repo>,
+    @InjectRepository(RepoRemote)
+    private readonly repoRemoteRepository: Repository<RepoRemote>,
+    @InjectRepository(DeployLocation)
+    private readonly deployLocRepository: Repository<DeployLocation>,
   ) {}
 
-  async findAll(): Promise<Repo[]> {
-    return this.repoRepository.find({
+  async findAll(): Promise<any[]> {
+    return this.repoRemoteRepository
+      .createQueryBuilder('self1')
+      .leftJoin(
+        RepoRemote,
+        'self2',
+        'self1.repoId = self2.repoId and self1.id < self2.id',
+      )
+      .where('self2.id IS NULL')
+      .getMany();
+  }
+
+  async findOneById(id: number): Promise<Repo> {
+    return this.repoRepository.findOne(id, {
       relations: ['deploylocations', 'remotes'],
     });
   }
