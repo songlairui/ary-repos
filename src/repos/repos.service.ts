@@ -15,16 +15,57 @@ export class ReposService {
     private readonly deployLocRepository: Repository<DeployLocation>,
   ) {}
 
-  async findAll(): Promise<any[]> {
-    return this.repoRemoteRepository
-      .createQueryBuilder('self1')
+  async findAll(): Promise<any> {
+    // 选出最近的一条记录const
+    const repoRemoteQb = this.repoRemoteRepository
+      .createQueryBuilder('Repo__remotes')
       .leftJoin(
         RepoRemote,
         'self2',
-        'self1.repoId = self2.repoId and self1.id < self2.id',
+        'Repo__remotes.repoId = self2.repoId and Repo__remotes.id < self2.id',
       )
       .where('self2.id IS NULL')
+      .getQuery();
+    // const deployLocQb = this.deployLocRepository
+    //   .createQueryBuilder('self1')
+    //   .leftJoin(
+    //     DeployLocation,
+    //     'self2',
+    //     'self1.repoId = self2.repoId and self1.id < self2.id',
+    //   )
+    //   .where('self2.id IS NULL')
+    //   .getQuery();
+
+    const result = await this.repoRepository
+      .createQueryBuilder('Repo')
+      .leftJoinAndSelect(
+        qr =>
+          qr
+            .subQuery()
+            .from(RepoRemote, 'RepoRemote')
+            .leftJoin(
+              `(${this.repoRemoteRepository
+                .createQueryBuilder('rr')
+                .where({})
+                .getQuery()})`,
+              'self2',
+              'RepoRemote.repoId = self2.rr_repoId and RepoRemote.id < self2.rr_id',
+            )
+            .where('self2.rr_id IS NULL'),
+        'r2',
+        'Repo.id = r2.repoId',
+      )
+      // .leftJoinAndSelect(
+      //   `(${repoRemoteQb})`,
+      //   'r2',
+      //   'Repo.id = r2.Repo__remotes_repoId',
+      // )
+      // .getQuery();
+      // .leftJoinAndSelect(deployLocQb, 'deployLoc', 'repo.id = deployLoc.repoId')
       .getMany();
+    console.info(result, 'result');
+    console.info(result.map(item => item.remotes));
+    return result;
   }
 
   async findOneById(id: number): Promise<Repo> {
