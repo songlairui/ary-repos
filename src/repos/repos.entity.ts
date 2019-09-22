@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
   ManyToOne,
+  BaseEntity,
 } from 'typeorm';
 import { AbstractBaseEntity } from '../common/abstract.entity';
 
@@ -19,8 +20,8 @@ export class Repo extends AbstractBaseEntity {
   description: string;
 
   // 存放路径， 存放设备, 多对多
-  @OneToMany(type => DepolyLocation, result => result.repo)
-  depolylocations: DepolyLocation[];
+  @OneToMany(type => DeployLocation, result => result.repo)
+  deploylocations: DeployLocation[];
 
   // 远程地址
   @OneToMany(type => RepoRemote, result => result.repo)
@@ -33,11 +34,11 @@ export class Repo extends AbstractBaseEntity {
 }
 
 @Entity()
-export class DepolyLocation extends AbstractBaseEntity {
+export class DeployLocation extends AbstractBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(type => Repo, result => result.depolylocations)
+  @ManyToOne(type => Repo, result => result.deploylocations)
   repo: Repo;
 
   @Column({ length: 500 })
@@ -51,14 +52,14 @@ export class DepolyLocation extends AbstractBaseEntity {
 
   @Column('text')
   description: string;
-  constructor(partial: Partial<DepolyLocation>) {
+  constructor(partial: Partial<DeployLocation>) {
     super();
     Object.assign(this, partial);
   }
 }
 
 @Entity()
-export class RepoRemote {
+export class RepoRemote extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -75,6 +76,7 @@ export class RepoRemote {
   push: string;
 
   constructor(partial: Partial<RepoRemote>) {
+    super();
     Object.assign(this, partial);
   }
 }
